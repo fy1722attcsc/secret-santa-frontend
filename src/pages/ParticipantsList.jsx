@@ -60,7 +60,7 @@ export default function ParticipantsList() {
               className="p-3 bg-red-800/60 backdrop-blur-sm rounded-lg shadow"
             >
               <strong>{p.name}</strong>
-              <div className="text-yellow-200 text-sm">{p.email}</div>
+              {/* <div className="text-yellow-200 text-sm">{p.email}</div> */}
             </li>
           ))}
         </ul>
