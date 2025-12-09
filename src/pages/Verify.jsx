@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import api from "../api/apiClient";
 
 export default function Verify() {
-  const [message, setMessage] = useState("Verifying...");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -12,46 +12,44 @@ export default function Verify() {
     const id = params.get("id");
 
     if (!token || !id) {
-      setMessage("Invalid verification link.");
-      toast.error("Invalid verification link!");
+      toast.error("Invalid verification link");
+      navigate("/");
       return;
     }
 
-    const verifyUrl = `https://secret-santa-backend-k02j.onrender.com/api/participants/verify?token=${token}&id=${id}`;
+    (async () => {
+      try {
+        // Call your backend via the same API client as the rest of the app
+        const res = await api.get(`/participants/verify?token=${token}&id=${id}`);
+        console.log("Verify response:", res.data);
 
-    fetch(verifyUrl)
-      .then((res) => res.json ? res.json() : res.text()) // handles redirects or text
-      .then((data) => {
-        // When backend returns JSON
-        if (data?.message === "Email verified successfully!") {
-          setMessage("🎉 Email Verified Successfully!");
-          toast.success("Email Verified Successfully!");
-
+        if (res.data?.message === "Email verified successfully!") {
+          toast.success("Email verified successfully!");
           setTimeout(() => {
             navigate("/participants");
           }, 1500);
         } else {
-          setMessage("Verification failed.");
-          toast.error("Verification failed!");
+          toast.error(res.data?.message || "Verification failed");
+          setTimeout(() => {
+            navigate("/");
+          }, 1500);
         }
-      })
-      .catch(() => {
-        // When backend sends text/html instead of JSON
-        setMessage("🎉 Email Verified Successfully!");
-        toast.success("Email Verified Successfully!");
-
+      } catch (err) {
+        console.error("Verify API error:", err);
+        toast.error(err?.response?.data?.message || "Verification failed");
         setTimeout(() => {
-          navigate("/participants");
+          navigate("/");
         }, 1500);
-      });
-  }, []);
+      }
+    })();
+  }, [navigate]);
 
   return (
     <div className="text-center p-10 text-white">
-      <h1 className="text-3xl font-bold">{message}</h1>
-      {message.includes("Verified") && (
-        <p className="opacity-70 mt-3">Redirecting...</p>
-      )}
+      <h1 className="text-3xl font-bold">Verifying your email...</h1>
+      <p className="opacity-70 mt-3">
+        Please wait, this will only take a moment.
+      </p>
     </div>
   );
 }
