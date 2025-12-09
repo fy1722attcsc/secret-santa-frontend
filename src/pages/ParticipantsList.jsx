@@ -7,6 +7,18 @@ export default function ParticipantsList() {
   const [participants, setParticipants] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const animatedIcons = [
+    { icon: "🎅", class: "animate-bounce" },                                  // bouncing Santa
+    { icon: "🎄", class: "animate-[shake_1s_ease-in-out_infinite]" },          // shaking tree
+    { icon: "🎁", class: "group-hover:animate-wiggle" },                        // gift wiggle on hover
+    { icon: "✨", class: "animate-pulse" },                                     // twinkling sparkle
+  ];
+
+  const getAnimatedIcon = (name) => {
+    const index = name.charCodeAt(0) % animatedIcons.length;
+    return animatedIcons[index];
+  };
+
   const loadParticipants = async () => {
     setLoading(true);
     const res = await api.get("/participants/verified/all");
@@ -53,16 +65,21 @@ export default function ParticipantsList() {
       {loading ? (
         <p className="text-center text-yellow-200">Loading...</p>
       ) : (
-        <ul className="space-y-3">
-          {participants.map((p, i) => (
-            <li
-              key={i}
-              className="p-3 bg-red-800/60 backdrop-blur-sm rounded-lg shadow"
-            >
-              <strong>{p.name}</strong>
-              {/* <div className="text-yellow-200 text-sm">{p.email}</div> */}
-            </li>
-          ))}
+        <ul className="space-y-4 flex flex-col items-center">
+          {participants.map((p, index) => {
+            const iconData = getAnimatedIcon(p.name);
+            return (
+              <li
+                key={index}
+                className="group w-72 flex items-center gap-4 p-4 bg-red-800/60 rounded-lg shadow justify-center"
+              >
+                <span className={`text-3xl ${iconData.class}`}>
+                  {iconData.icon}
+                </span>
+                <strong className="text-xl">{p.name}</strong>
+              </li>
+            );
+          })}
         </ul>
       )}
 
