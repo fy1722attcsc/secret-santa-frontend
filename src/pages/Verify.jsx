@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export default function Verify() {
   const [message, setMessage] = useState("Verifying...");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -10,21 +13,40 @@ export default function Verify() {
 
     if (!token || !id) {
       setMessage("Invalid verification link.");
+      toast.error("Invalid verification link!");
       return;
     }
 
-    fetch(`https://secret-santa-backend-k02j.onrender.com/api/participants/verify?token=${token}&id=${id}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.message) setMessage(data.message);
-        else setMessage("Verification failed.");
+    fetch(
+      `https://secret-santa-backend-k02j.onrender.com/api/participants/verify?token=${token}&id=${id}`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.message === "Email verified successfully!") {
+          setMessage("🎉 Email Verified Successfully!");
+
+          // 🔥 SHOW POPUP
+          toast.success("Email Verified Successfully!");
+
+          // 🔥 REDIRECT AFTER 1.5 SECONDS
+          setTimeout(() => {
+            navigate("/participants"); // client-side redirect
+          }, 1500);
+        } else {
+          setMessage("Verification failed.");
+          toast.error("Verification failed!");
+        }
       })
-      .catch(() => setMessage("Verification failed."));
+      .catch(() => {
+        setMessage("Verification failed.");
+        toast.error("Verification failed!");
+      });
   }, []);
 
   return (
-    <div style={{ padding: "30px", textAlign: "center", color: "#fff" }}>
-      <h1>{message}</h1>
+    <div className="text-center p-10 text-white">
+      <h1 className="text-3xl font-bold">{message}</h1>
+      <p className="opacity-70 mt-3">You will be redirected shortly...</p>
     </div>
   );
 }
