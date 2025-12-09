@@ -6,12 +6,13 @@ import { motion } from "framer-motion";
 export default function ParticipantsList() {
   const [participants, setParticipants] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [drawLocked, setDrawLocked] = useState(false);
 
   const animatedIcons = [
-    { icon: "🎅", class: "animate-bounce" },                                  // bouncing Santa
-    { icon: "🎄", class: "animate-[shake_1s_ease-in-out_infinite]" },          // shaking tree
-    { icon: "🎁", class: "group-hover:animate-wiggle" },                        // gift wiggle on hover
-    { icon: "✨", class: "animate-pulse" },                                     // twinkling sparkle
+    { icon: "🎅", class: "animate-bounce" },
+    { icon: "🎄", class: "animate-[shake_1s_ease-in-out_infinite]" },
+    { icon: "🎁", class: "group-hover:animate-wiggle" },
+    { icon: "✨", class: "animate-pulse" }
   ];
 
   const getAnimatedIcon = (name) => {
@@ -19,11 +20,28 @@ export default function ParticipantsList() {
     return animatedIcons[index];
   };
 
+  const loadDrawStatus = async (count) => {
+    try {
+      const res = await api.get("/draw/state");
+      const state = res.data;
+
+      if (state?.hasDrawRun && state?.lastCount === count) {
+        setDrawLocked(true);
+      } else {
+        setDrawLocked(false);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const loadParticipants = async () => {
     setLoading(true);
     const res = await api.get("/participants/verified/all");
     setParticipants(res.data.participants);
     setLoading(false);
+
+    await loadDrawStatus(res.data.participants.length);
   };
 
   useEffect(() => {
@@ -85,10 +103,16 @@ export default function ParticipantsList() {
 
       {participants.length >= 3 && (
         <button
+          disabled={drawLocked}
           onClick={handleDraw}
-          className="mt-6 w-full bg-green-500 text-white py-2 rounded-lg font-bold hover:bg-green-400 transition"
+          className={`mt-6 w-full py-2 rounded-lg font-bold transition
+            ${
+              drawLocked
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-green-500 hover:bg-green-400"
+            }`}
         >
-          Run Secret Santa Draw
+          {drawLocked ? "Draw Completed 🎉" : "Run Secret Santa Draw"}
         </button>
       )}
     </motion.div>
